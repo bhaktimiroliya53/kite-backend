@@ -73,29 +73,34 @@ exports.getPosts = async (req, res) => {
       // Safety check
       if (!postOwner) return false;
 
-      // Public account → everyone can see
+      const isOwner =
+        currentUserId &&
+        postOwner._id.toString() === currentUserId.toString();
+
+      const isFollower =
+        currentUserId &&
+        postOwner.followers?.some(
+          (followerId) =>
+            followerId.toString() === currentUserId.toString()
+        );
+
+      // Only me → owner only
+      if (post.audience === "private") {
+        return Boolean(isOwner);
+      }
+
+      // Followers → owner + followers
+      if (post.audience === "followers") {
+        return Boolean(isOwner || isFollower);
+      }
+
+      // Everyone → existing account privacy behavior
       if (!postOwner.privateAccount) {
         return true;
       }
 
-      // Private account → owner can see own posts
-      if (
-        currentUserId &&
-        postOwner._id.toString() === currentUserId.toString()
-      ) {
-        return true;
-      }
-
-      // Private account → approved followers can see
-      if (currentUserId) {
-        return postOwner.followers?.some(
-          (followerId) =>
-            followerId.toString() === currentUserId.toString()
-        );
-      }
-
-      // Not logged in → cannot see private posts
-      return false;
+      // Private account → owner + approved followers
+      return Boolean(isOwner || isFollower);
     });
 
     res.status(200).json(visiblePosts);
@@ -494,10 +499,30 @@ exports.getUserPosts = async (req, res) => {
       .populate("reposts", "username avatar")
       .sort({ _id: -1 });
 
+    const visiblePosts = posts.filter((post) => {
+      // Everyone
+      if (post.audience === "everyone") {
+        return true;
+      }
+
+      // Only me → owner only
+      if (post.audience === "private") {
+        return Boolean(isOwner);
+      }
+
+      // Followers → owner + followers
+      if (post.audience === "followers") {
+        return Boolean(isOwner || isFollower);
+      }
+
+      // Safety fallback
+      return true;
+    });
+
     res.status(200).json({
       privateAccount: profileUser.privateAccount,
       canViewPosts: true,
-      posts,
+      posts: visiblePosts,
     });
 
   } catch (error) {
