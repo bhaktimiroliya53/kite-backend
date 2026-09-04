@@ -7,7 +7,7 @@ exports.createPost = async (req, res) => {
   try {
     console.log("REQUEST BODY =>", req.body);
 
-    const { content, image, userId, taggedPeople } = req.body;
+    const { content, image, userId, taggedPeople, audience, mood } = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -31,6 +31,11 @@ exports.createPost = async (req, res) => {
       username: user.username || "Unknown User",
       profilePic: user.avatar || "",
       taggedPeople: Array.isArray(taggedPeople) ? taggedPeople : [],
+      audience: ["everyone", "followers", "private"].includes(audience)
+        ? audience
+        : "everyone",
+
+      mood: mood || "",
     });
 
     await newPost.save();

@@ -35,6 +35,17 @@ const postSchema = new mongoose.Schema(
       },
     ],
 
+    audience: {
+      type: String,
+      enum: ["everyone", "followers", "private"],
+      default: "everyone",
+    },
+
+    mood: {
+      type: String,
+      default: "",
+    },
+
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
