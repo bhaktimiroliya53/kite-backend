@@ -46,6 +46,23 @@ const postSchema = new mongoose.Schema(
       default: "",
     },
 
+    location: {
+  name: {
+    type: String,
+    default: "",
+  },
+  address: {
+    type: String,
+    default: "",
+  },
+  latitude: {
+    type: Number,
+  },
+  longitude: {
+    type: Number,
+  },
+},
+
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
