@@ -15,6 +15,7 @@ exports.createPost = async (req, res) => {
       audience,
       mood,
       location,
+      music,
     } = req.body;
 
     if (!userId) {
@@ -50,6 +51,8 @@ exports.createPost = async (req, res) => {
       mood: mood || "",
 
       location: location || null,
+
+      music: music || null,
     });
 
     await newPost.save();

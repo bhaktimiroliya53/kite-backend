@@ -47,21 +47,52 @@ const postSchema = new mongoose.Schema(
     },
 
     location: {
-  name: {
-    type: String,
-    default: "",
-  },
-  address: {
-    type: String,
-    default: "",
-  },
-  latitude: {
-    type: Number,
-  },
-  longitude: {
-    type: Number,
-  },
-},
+      name: {
+        type: String,
+        default: "",
+      },
+      address: {
+        type: String,
+        default: "",
+      },
+      latitude: {
+        type: Number,
+      },
+      longitude: {
+        type: Number,
+      },
+    },
+
+    music: {
+      trackId: {
+        type: String,
+        default: "",
+      },
+      title: {
+        type: String,
+        default: "",
+      },
+      artist: {
+        type: String,
+        default: "",
+      },
+      album: {
+        type: String,
+        default: "",
+      },
+      artwork: {
+        type: String,
+        default: "",
+      },
+      previewUrl: {
+        type: String,
+        default: "",
+      },
+      trackUrl: {
+        type: String,
+        default: "",
+      },
+    },
 
     likes: [
       {
@@ -69,7 +100,6 @@ const postSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-
 
     comments: [
       {
