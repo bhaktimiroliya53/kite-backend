@@ -6,6 +6,7 @@ const {
   getPosts,
   getUserPosts,
   deletePost,
+  editPost,
   toggleLike,
   addComment,
   toggleCommentLike,
@@ -25,6 +26,8 @@ router.get("/", getPosts);
 router.get("/user/:userId", getUserPosts);
 
 router.delete("/:id", deletePost);
+
+router.put("/edit/:id", editPost);
 
 router.put("/like/:id", toggleLike);
 

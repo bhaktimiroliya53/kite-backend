@@ -153,6 +153,65 @@ exports.deletePost = async (req, res) => {
   }
 };
 
+// Edit Post
+exports.editPost = async (req, res) => {
+  try {
+    const { userId, content, taggedPeople, audience, mood, location, music } =
+      req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        message: "userId is required",
+      });
+    }
+
+    const post = await Post.findOne({
+      _id: req.params.id,
+      userId: userId,
+    });
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found or you are not the owner",
+      });
+    }
+
+    // Only editable fields are updated.
+    // image/media is intentionally NOT touched.
+    post.content = typeof content === "string" ? content : post.content;
+
+    post.taggedPeople = Array.isArray(taggedPeople)
+      ? taggedPeople
+      : post.taggedPeople;
+
+    if (["everyone", "followers", "private"].includes(audience)) {
+      post.audience = audience;
+    }
+
+    post.mood = typeof mood === "string" ? mood : post.mood;
+
+    if (location === null || typeof location === "object") {
+      post.location = location;
+    }
+
+    if (music === null || typeof music === "object") {
+      post.music = music;
+    }
+
+    await post.save();
+
+    res.status(200).json({
+      message: "Post updated successfully",
+      post,
+    });
+  } catch (error) {
+    console.error("EDIT POST ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 // Toggle Like
 exports.toggleLike = async (req, res) => {
   try {
