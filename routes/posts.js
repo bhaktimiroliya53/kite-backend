@@ -11,6 +11,7 @@ const {
   toggleCommentLike,
   deleteComment,
   toggleRepost,
+  reportPost,
   toggleSave,
   addReply,
   toggleReplyLike,
@@ -49,6 +50,8 @@ router.put(
 router.put("/repost/:id", toggleRepost);
 
 router.put("/save/:id", toggleSave);
+
+router.post("/report/:id", reportPost);
 
 module.exports = router;
 

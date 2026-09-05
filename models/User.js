@@ -65,13 +65,26 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
 
+    notInterestedPosts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+
+    mutedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
       trim: true,
     },
-
 
   },
   { timestamps: true }

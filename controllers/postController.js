@@ -1,6 +1,8 @@
 const Post = require("../models/Post");
+const Report = require("../models/Report");
 const cloudinary = require("../config/cloudinary");
 const User = require("../models/User");
+
 
 // Create Post
 exports.createPost = async (req, res) => {
@@ -735,4 +737,54 @@ exports.repostComment = async (req, res) => {
 
   }
 
+};
+
+exports.reportPost = async (req, res) => {
+  try {
+    const { reporterId, reason } = req.body;
+    const { id } = req.params;
+
+    if (!reporterId) {
+      return res.status(400).json({
+        message: "Reporter ID is required",
+      });
+    }
+
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found",
+      });
+    }
+
+    const existingReport = await Report.findOne({
+      reporterId,
+      postId: id,
+      status: "pending",
+    });
+
+    if (existingReport) {
+      return res.status(400).json({
+        message: "You have already reported this post",
+      });
+    }
+
+    const report = await Report.create({
+      reporterId,
+      postId: id,
+      reason: reason || "",
+    });
+
+    res.status(201).json({
+      message: "Post reported successfully",
+      report,
+    });
+  } catch (error) {
+    console.error("REPORT POST ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
