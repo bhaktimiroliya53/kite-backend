@@ -5,6 +5,7 @@ const {
   createPost,
   getPosts,
   searchPosts,
+  getPostById,
   getUserPosts,
   deletePost,
   editPost,
@@ -27,6 +28,8 @@ router.get("/", getPosts);
 router.get("/search", searchPosts);
 
 router.get("/user/:userId", getUserPosts);
+
+router.get("/:id", getPostById);
 
 router.delete("/:id", deletePost);
 

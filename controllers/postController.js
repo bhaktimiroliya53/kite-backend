@@ -207,6 +207,78 @@ exports.searchPosts = async (req, res) => {
   }
 };
 
+// Get Single Post
+exports.getPostById = async (req, res) => {
+  try {
+    const currentUserId = req.query.userId;
+
+    const post = await Post.findById(req.params.id)
+      .populate("userId", "username avatar privateAccount followers")
+      .populate("likes", "username avatar")
+      .populate("reposts", "username avatar");
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found",
+      });
+    }
+
+    const postOwner = post.userId;
+
+    if (!postOwner) {
+      return res.status(404).json({
+        message: "Post owner not found",
+      });
+    }
+
+    const isOwner =
+      currentUserId &&
+      postOwner._id.toString() === currentUserId.toString();
+
+    const isFollower =
+      currentUserId &&
+      postOwner.followers?.some(
+        (followerId) =>
+          followerId.toString() === currentUserId.toString()
+      );
+
+    if (post.audience === "private" && !isOwner) {
+      return res.status(403).json({
+        message: "You cannot view this post",
+      });
+    }
+
+    if (
+      post.audience === "followers" &&
+      !isOwner &&
+      !isFollower
+    ) {
+      return res.status(403).json({
+        message: "You cannot view this post",
+      });
+    }
+
+    if (
+      post.audience === "everyone" &&
+      postOwner.privateAccount &&
+      !isOwner &&
+      !isFollower
+    ) {
+      return res.status(403).json({
+        message: "You cannot view this post",
+      });
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    console.log("GET SINGLE POST ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 // Delete Post
 exports.deletePost = async (req, res) => {
   try {
