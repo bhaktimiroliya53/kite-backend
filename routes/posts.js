@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createPost,
   getPosts,
+  searchPosts,
   getUserPosts,
   deletePost,
   editPost,
@@ -22,6 +23,8 @@ const {
 router.post("/", createPost);
 
 router.get("/", getPosts);
+
+router.get("/search", searchPosts);
 
 router.get("/user/:userId", getUserPosts);
 

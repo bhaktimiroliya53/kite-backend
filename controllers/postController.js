@@ -132,6 +132,81 @@ exports.getPosts = async (req, res) => {
   }
 };
 
+// Search Posts
+exports.searchPosts = async (req, res) => {
+  try {
+    const query = req.query.q?.trim();
+    const currentUserId = req.query.userId;
+
+    if (!query) {
+      return res.status(200).json([]);
+    }
+
+    const searchText = query.replace(/^#/, "");
+
+    const posts = await Post.find({
+      $or: [
+        {
+          content: {
+            $regex: searchText,
+            $options: "i",
+          },
+        },
+        {
+          username: {
+            $regex: searchText,
+            $options: "i",
+          },
+        },
+      ],
+    })
+      .populate("userId", "username avatar privateAccount followers")
+      .populate("likes", "username avatar")
+      .populate("reposts", "username avatar")
+      .sort({ _id: -1 })
+      .limit(20);
+
+    const visiblePosts = posts.filter((post) => {
+      const postOwner = post.userId;
+
+      if (!postOwner) return false;
+
+      const isOwner =
+        currentUserId &&
+        postOwner._id.toString() === currentUserId.toString();
+
+      const isFollower =
+        currentUserId &&
+        postOwner.followers?.some(
+          (followerId) =>
+            followerId.toString() === currentUserId.toString()
+        );
+
+      if (post.audience === "private") {
+        return Boolean(isOwner);
+      }
+
+      if (post.audience === "followers") {
+        return Boolean(isOwner || isFollower);
+      }
+
+      if (!postOwner.privateAccount) {
+        return true;
+      }
+
+      return Boolean(isOwner || isFollower);
+    });
+
+    res.status(200).json(visiblePosts);
+  } catch (error) {
+    console.log("SEARCH POSTS ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 // Delete Post
 exports.deletePost = async (req, res) => {
   try {
