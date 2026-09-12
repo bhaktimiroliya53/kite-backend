@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
   getAllUsers,
+  searchUsers,  
   getProfile,
   updateProfile,
   toggleFollow,
@@ -15,6 +16,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.get("/", getAllUsers);
+
+router.get("/search", searchUsers);
 
 router.put("/follow/:id", toggleFollow);
 
