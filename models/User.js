@@ -65,6 +65,12 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
 
+    notificationRetention: {
+      type: String,
+      enum: ["1m", "24h", "2d", "3d", "forever"],
+      default: "24h",
+    },
+
     notInterestedPosts: [
       {
         type: mongoose.Schema.Types.ObjectId,
