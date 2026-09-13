@@ -25,15 +25,13 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    const notification = await Notification.create({
-      type: "user",
-      message: `${username} has joined KITE`,
-    });
-
-    global.io.emit(
-      "newNotification",
-      notification
-    );
+    await Notification.create({
+  userId: user._id,
+  actorId: user._id,
+  actorUsername: user.username,
+  type: "system",
+  message: `Welcome to KITE, ${user.username}! Your account is ready.`,
+});
 
     res.status(201).json({
       message: "User registered successfully",
