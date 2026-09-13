@@ -119,9 +119,18 @@ exports.toggleFollow = async (req, res) => {
       await targetUser.save();
       await currentUser.save();
 
+      // Create Pulse notification for the target user
+      await Notification.create({
+        userId: targetUser._id,
+        actorId: currentUser._id,
+        actorUsername: currentUser.username,
+        type: "follow",
+        message: `${currentUser.username} started following you`,
+      });
+
       return res.status(200).json({
         success: true,
-        status: "unfollowed",
+        status: "following",
       });
     }
 
