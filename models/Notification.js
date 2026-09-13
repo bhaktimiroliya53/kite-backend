@@ -40,6 +40,12 @@ const notificationSchema = new mongoose.Schema(
     }
 );
 
+notificationSchema.post("save", function (doc) {
+    if (global.emitNotification && doc.userId) {
+        global.emitNotification(doc.userId, doc);
+    }
+});
+
 module.exports = mongoose.model(
     "Notification",
     notificationSchema

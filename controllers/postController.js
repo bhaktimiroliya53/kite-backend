@@ -2,6 +2,7 @@ const Post = require("../models/Post");
 const Report = require("../models/Report");
 const cloudinary = require("../config/cloudinary");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 
 
 // Create Post
@@ -59,7 +60,28 @@ exports.createPost = async (req, res) => {
 
     await newPost.save();
 
-    res.status(201).json(newPost);
+// Create notifications for tagged people
+if (Array.isArray(taggedPeople) && taggedPeople.length > 0) {
+  const actor = await User.findById(userId);
+
+  if (actor) {
+    const notifications = taggedPeople
+      .filter((taggedUserId) => taggedUserId.toString() !== userId.toString())
+      .map((taggedUserId) => ({
+        userId: taggedUserId,
+        actorId: actor._id,
+        actorUsername: actor.username,
+        type: "tag",
+        message: `${actor.username} tagged you in a post`,
+      }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+  }
+}
+
+res.status(201).json(newPost);
   } catch (error) {
     console.error("CREATE POST ERROR =>", error);
 
@@ -388,6 +410,21 @@ exports.toggleLike = async (req, res) => {
 
       post.likes.push(userId);
 
+      // Create notification for post owner
+      if (post.userId.toString() !== userId.toString()) {
+        const actor = await User.findById(userId);
+
+        if (actor) {
+          await Notification.create({
+            userId: post.userId,
+            actorId: actor._id,
+            actorUsername: actor.username,
+            type: "like",
+            message: `${actor.username} liked your post`,
+          });
+        }
+      }
+
     }
 
     await post.save();
@@ -438,6 +475,26 @@ exports.toggleCommentLike = async (req, res) => {
       );
     } else {
       comment.likes.push(userId);
+
+      // Create notification for comment owner
+      const commentOwnerId = comment.userId;
+
+      if (
+        commentOwnerId &&
+        commentOwnerId.toString() !== userId.toString()
+      ) {
+        const actor = await User.findById(userId);
+
+        if (actor) {
+          await Notification.create({
+            userId: commentOwnerId,
+            actorId: actor._id,
+            actorUsername: actor.username,
+            type: "comment-like",
+            message: `${actor.username} liked your comment`,
+          });
+        }
+      }
     }
 
     await post.save();
@@ -487,6 +544,21 @@ exports.addComment = async (req, res) => {
     });
 
     await post.save();
+
+    // Create notification for post owner
+    if (post.userId.toString() !== userId.toString()) {
+      const actor = await User.findById(userId);
+
+      if (actor) {
+        await Notification.create({
+          userId: post.userId,
+          actorId: actor._id,
+          actorUsername: actor.username,
+          type: "comment",
+          message: `${actor.username} commented on your post`,
+        });
+      }
+    }
 
     res.status(200).json(post);
   } catch (error) {
@@ -540,20 +612,30 @@ exports.addReply = async (req, res) => {
 
 
     comment.replies.push({
-
       userId,
-      avatar,
-      text,
+      avatar: avatar || "",
+      text: text || "",
       image: image || "",
-
       likes: [],
-
-      createdAt: new Date()
-
+      replies: [],
     });
 
-
     await post.save();
+
+    // Create notification for post owner
+    if (post.userId.toString() !== userId.toString()) {
+      const actor = await User.findById(userId);
+
+      if (actor) {
+        await Notification.create({
+          userId: post.userId,
+          actorId: actor._id,
+          actorUsername: actor.username,
+          type: "reply",
+          message: `${actor.username} replied to a comment on your post`,
+        });
+      }
+    }
 
 
     res.status(200).json(post);
@@ -620,10 +702,23 @@ exports.toggleRepost = async (req, res) => {
       );
 
     } else {
+  post.reposts.push(userId);
 
-      post.reposts.push(userId);
+  // Create notification for post owner
+  if (post.userId.toString() !== userId.toString()) {
+    const actor = await User.findById(userId);
 
+    if (actor) {
+      await Notification.create({
+        userId: post.userId,
+        actorId: actor._id,
+        actorUsername: actor.username,
+        type: "repost",
+        message: `${actor.username} reposted your post`,
+      });
     }
+  }
+}
 
     await post.save();
 
@@ -800,15 +895,35 @@ exports.addReply = async (req, res) => {
     }
 
     comment.replies.push({
-      userId,
-      avatar: avatar || "",
-      text: text || "",
-      image: image || "",
-      likes: [],
-      replies: [],
-    });
+  userId,
+  avatar: avatar || "",
+  text: text || "",
+  image: image || "",
+  likes: [],
+  replies: [],
+});
 
-    await post.save();
+// Create notification for comment owner
+const commentOwnerId = comment.userId;
+
+if (
+  commentOwnerId &&
+  commentOwnerId.toString() !== userId.toString()
+) {
+  const actor = await User.findById(userId);
+
+  if (actor) {
+    await Notification.create({
+      userId: commentOwnerId,
+      actorId: actor._id,
+      actorUsername: actor.username,
+      type: "reply",
+      message: `${actor.username} replied to your comment`,
+    });
+  }
+}
+
+await post.save();
 
     res.status(200).json(post);
   } catch (error) {
@@ -863,6 +978,25 @@ exports.toggleReplyLike = async (req, res) => {
       );
     } else {
       reply.likes.push(userId);
+
+      const replyOwnerId = reply.userId;
+
+      if (
+        replyOwnerId &&
+        replyOwnerId.toString() !== userId.toString()
+      ) {
+        const actor = await User.findById(userId);
+
+        if (actor) {
+          await Notification.create({
+            userId: replyOwnerId,
+            actorId: actor._id,
+            actorUsername: actor.username,
+            type: "reply-like",
+            message: `${actor.username} liked your reply`,
+          });
+        }
+      }
     }
 
     await post.save();

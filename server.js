@@ -154,3 +154,7 @@ mongoose
   });
 
 global.io = io;
+
+global.emitNotification = (userId, notification) => {
+  io.to(userId.toString()).emit("new-notification", notification);
+};
