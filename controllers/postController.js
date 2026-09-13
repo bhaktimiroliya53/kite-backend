@@ -60,28 +60,34 @@ exports.createPost = async (req, res) => {
 
     await newPost.save();
 
-// Create notifications for tagged people
-if (Array.isArray(taggedPeople) && taggedPeople.length > 0) {
-  const actor = await User.findById(userId);
+    // Create notifications for tagged people
+    if (Array.isArray(taggedPeople) && taggedPeople.length > 0) {
+      const actor = await User.findById(userId);
 
-  if (actor) {
-    const notifications = taggedPeople
-      .filter((taggedUserId) => taggedUserId.toString() !== userId.toString())
-      .map((taggedUserId) => ({
-        userId: taggedUserId,
-        actorId: actor._id,
-        actorUsername: actor.username,
-        type: "tag",
-        message: `${actor.username} tagged you in a post`,
-      }));
+      if (actor) {
+        const notifications = taggedPeople
+          .filter((taggedUserId) => taggedUserId.toString() !== userId.toString())
+          .map((taggedUserId) => ({
+            userId: taggedUserId,
+            actorId: actor._id,
+            actorUsername: actor.username,
+            postId: newPost._id,
+            type: "tag",
+            message: `${actor.username} tagged you in a post`,
+          }));
 
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
+        if (notifications.length > 0) {
+          await Notification.insertMany(notifications);
+          notifications.forEach((notification) => {
+            if (global.emitNotification && notification.userId) {
+              global.emitNotification(notification.userId, notification);
+            }
+          });
+        }
+      }
     }
-  }
-}
 
-res.status(201).json(newPost);
+    res.status(201).json(newPost);
   } catch (error) {
     console.error("CREATE POST ERROR =>", error);
 
@@ -420,6 +426,7 @@ exports.toggleLike = async (req, res) => {
             actorId: actor._id,
             actorUsername: actor.username,
             type: "like",
+            postId: post._id,
             message: `${actor.username} liked your post`,
           });
         }
@@ -490,6 +497,7 @@ exports.toggleCommentLike = async (req, res) => {
             userId: commentOwnerId,
             actorId: actor._id,
             actorUsername: actor.username,
+            postId: post._id,
             type: "comment-like",
             message: `${actor.username} liked your comment`,
           });
@@ -555,6 +563,7 @@ exports.addComment = async (req, res) => {
           actorId: actor._id,
           actorUsername: actor.username,
           type: "comment",
+          postId: post._id,
           message: `${actor.username} commented on your post`,
         });
       }
@@ -702,23 +711,24 @@ exports.toggleRepost = async (req, res) => {
       );
 
     } else {
-  post.reposts.push(userId);
+      post.reposts.push(userId);
 
-  // Create notification for post owner
-  if (post.userId.toString() !== userId.toString()) {
-    const actor = await User.findById(userId);
+      // Create notification for post owner
+      if (post.userId.toString() !== userId.toString()) {
+        const actor = await User.findById(userId);
 
-    if (actor) {
-      await Notification.create({
-        userId: post.userId,
-        actorId: actor._id,
-        actorUsername: actor.username,
-        type: "repost",
-        message: `${actor.username} reposted your post`,
-      });
+        if (actor) {
+          await Notification.create({
+            userId: post.userId,
+            actorId: actor._id,
+            actorUsername: actor.username,
+            postId: post._id,
+            type: "repost",
+            message: `${actor.username} reposted your post`,
+          });
+        }
+      }
     }
-  }
-}
 
     await post.save();
 
@@ -895,35 +905,36 @@ exports.addReply = async (req, res) => {
     }
 
     comment.replies.push({
-  userId,
-  avatar: avatar || "",
-  text: text || "",
-  image: image || "",
-  likes: [],
-  replies: [],
-});
-
-// Create notification for comment owner
-const commentOwnerId = comment.userId;
-
-if (
-  commentOwnerId &&
-  commentOwnerId.toString() !== userId.toString()
-) {
-  const actor = await User.findById(userId);
-
-  if (actor) {
-    await Notification.create({
-      userId: commentOwnerId,
-      actorId: actor._id,
-      actorUsername: actor.username,
-      type: "reply",
-      message: `${actor.username} replied to your comment`,
+      userId,
+      avatar: avatar || "",
+      text: text || "",
+      image: image || "",
+      likes: [],
+      replies: [],
     });
-  }
-}
 
-await post.save();
+    // Create notification for comment owner
+    const commentOwnerId = comment.userId;
+
+    if (
+      commentOwnerId &&
+      commentOwnerId.toString() !== userId.toString()
+    ) {
+      const actor = await User.findById(userId);
+
+      if (actor) {
+        await Notification.create({
+          userId: commentOwnerId,
+          actorId: actor._id,
+          actorUsername: actor.username,
+          postId: post._id,
+          type: "reply",
+          message: `${actor.username} replied to your comment`,
+        });
+      }
+    }
+
+    await post.save();
 
     res.status(200).json(post);
   } catch (error) {
@@ -992,6 +1003,7 @@ exports.toggleReplyLike = async (req, res) => {
             userId: replyOwnerId,
             actorId: actor._id,
             actorUsername: actor.username,
+            postId: post._id,
             type: "reply-like",
             message: `${actor.username} liked your reply`,
           });

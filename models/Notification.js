@@ -34,6 +34,12 @@ const notificationSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+
+        postId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Post",
+            required: false,
+        },
     },
     {
         timestamps: true,
