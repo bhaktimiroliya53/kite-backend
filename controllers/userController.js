@@ -208,6 +208,13 @@ exports.approveFollowRequest = async (req, res) => {
       });
     }
 
+    console.log("APPROVE TARGET USER =>", targetUser._id.toString());
+    console.log("APPROVE REQUESTER =>", userId.toString());
+    console.log(
+      "CURRENT FOLLOW REQUESTS =>",
+      targetUser.followRequests?.map((id) => id.toString())
+    );
+
     const hasRequest = targetUser.followRequests?.some(
       (id) => id.toString() === userId.toString()
     );
