@@ -54,36 +54,30 @@ const notificationSchema = new mongoose.Schema(
     }
 );
 
-notificationSchema.pre("save", async function (next) {
-    try {
-        if (!this.isNew || !this.userId) {
-            return next();
-        }
+notificationSchema.pre("save", async function() {
+    if (!this.isNew || !this.userId) {
+        return;
+    }
 
-        const user = await User.findById(this.userId).select(
-            "notificationRetention"
+    const user = await User.findById(this.userId).select(
+        "notificationRetention"
+    );
+
+    const retention = user?.notificationRetention || "24h";
+
+    if (retention === "forever") {
+        this.expiresAt = null;
+    } else {
+        const durations = {
+            "1m": 60 * 1000,
+            "24h": 24 * 60 * 60 * 1000,
+            "2d": 2 * 24 * 60 * 60 * 1000,
+            "3d": 3 * 24 * 60 * 60 * 1000,
+        };
+
+        this.expiresAt = new Date(
+            Date.now() + durations[retention]
         );
-
-        const retention = user?.notificationRetention || "24h";
-
-        if (retention === "forever") {
-            this.expiresAt = null;
-        } else {
-            const durations = {
-                "1m": 60 * 1000,
-                "24h": 24 * 60 * 60 * 1000,
-                "2d": 2 * 24 * 60 * 60 * 1000,
-                "3d": 3 * 24 * 60 * 60 * 1000,
-            };
-
-            this.expiresAt = new Date(
-                Date.now() + durations[retention]
-            );
-        }
-
-        next();
-    } catch (error) {
-        next(error);
     }
 });
 
