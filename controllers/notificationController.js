@@ -9,7 +9,7 @@ const getNotifications = async (req, res) => {
         const notifications = await Notification.find({
     userId: userId,
 })
-    .populate("actorId", "username profilePic")
+    .populate("actorId", "username avatar")
     .sort({ createdAt: -1 })
     .lean();
 
