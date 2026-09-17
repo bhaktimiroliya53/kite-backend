@@ -7,10 +7,11 @@ const getNotifications = async (req, res) => {
         const { userId } = req.params;
 
         const notifications = await Notification.find({
-            userId: userId,
-        })
-            .sort({ createdAt: -1 })
-            .lean();
+    userId: userId,
+})
+    .populate("actorId", "username profilePic")
+    .sort({ createdAt: -1 })
+    .lean();
 
         res.status(200).json(notifications);
 

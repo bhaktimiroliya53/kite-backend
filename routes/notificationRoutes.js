@@ -11,4 +11,5 @@ router.get("/:userId", getNotifications);
 router.put("/read/:notificationId", markNotificationAsRead);
 router.delete("/:notificationId", deleteNotification);
 
+
 module.exports = router;

@@ -77,7 +77,9 @@ exports.createPost = async (req, res) => {
           }));
 
         if (notifications.length > 0) {
-          await Notification.insertMany(notifications);
+          await Promise.all(
+            notifications.map((notification) => Notification.create(notification))
+          );
           notifications.forEach((notification) => {
             if (global.emitNotification && notification.userId) {
               global.emitNotification(notification.userId, notification);
