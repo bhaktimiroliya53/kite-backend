@@ -65,10 +65,54 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
 
-    notificationRetention: {
-      type: String,
-      enum: ["1m", "24h", "2d", "3d", "forever"],
-      default: "24h",
+    notificationRetentionSettings: {
+      likes: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "24h",
+      },
+
+      comments: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "3d",
+      },
+
+      replies: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "3d",
+      },
+
+      follows: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "7d",
+      },
+
+      followRequests: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "7d",
+      },
+
+      mentions: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "7d",
+      },
+
+      reposts: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "3d",
+      },
+
+      system: {
+        type: String,
+        enum: ["1m", "24h", "2d", "3d", "7d", "30d", "forever"],
+        default: "forever",
+      },
     },
 
     notInterestedPosts: [
