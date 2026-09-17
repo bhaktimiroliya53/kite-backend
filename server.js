@@ -12,6 +12,7 @@ const userRoutes = require("./routes/users");
 const messageRoutes = require("./routes/messageRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -128,6 +129,8 @@ app.use(
   "/api/notifications",
   notificationRoutes
 );
+
+app.use("/api/ai", aiRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
