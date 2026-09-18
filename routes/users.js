@@ -10,6 +10,7 @@ const {
   runSecurityCheck,
   approveFollowRequest,
   rejectFollowRequest,
+  logoutSession,
 } = require("../controllers/userController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -29,6 +30,12 @@ router.put("/follow-request/reject/:id", rejectFollowRequest);
 router.put("/settings/:id", updateSettings);
 
 router.put("/security-check", authMiddleware, runSecurityCheck);
+
+router.put(
+  "/sessions/:sessionId/logout",
+  authMiddleware,
+  logoutSession
+);
 
 router.put("/:id", updateProfile);
 

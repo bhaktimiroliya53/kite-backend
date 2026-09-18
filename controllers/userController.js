@@ -471,3 +471,43 @@ exports.runSecurityCheck = async (req, res) => {
     });
   }
 };
+
+// Logout Specific Session
+exports.logoutSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const session = user.loginActivity.find(
+      (activity) => activity.sessionId === sessionId
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Session not found",
+      });
+    }
+
+    session.isActive = false;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Session logged out successfully",
+    });
+  } catch (error) {
+    console.log("LOGOUT SESSION ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
