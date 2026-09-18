@@ -31,6 +31,40 @@ const userSchema = new mongoose.Schema(
       },
     },
 
+    loginActivity: [
+  {
+    sessionId: {
+      type: String,
+      required: true,
+    },
+
+    device: {
+      type: String,
+      default: "Unknown device",
+    },
+
+    browser: {
+      type: String,
+      default: "Unknown browser",
+    },
+
+    ipAddress: {
+      type: String,
+      default: "",
+    },
+
+    loginAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+],
+
     avatar: {
       type: String,
       default: "",

@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Notification = require("../models/Notification");
+const crypto = require("crypto");
 // Register User
 exports.registerUser = async (req, res) => {
   try {
@@ -74,13 +75,34 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      "secretkey",
-      {
-        expiresIn: "7d",
-      }
-    );
+    const sessionId = crypto.randomUUID();
+
+const token = jwt.sign(
+  {
+    id: user._id,
+    sessionId,
+  },
+  "secretkey",
+  {
+    expiresIn: "7d",
+  }
+);
+
+user.loginActivity.unshift({
+  sessionId,
+  device: req.headers["user-agent"] || "Unknown device",
+  browser: req.headers["user-agent"] || "Unknown browser",
+  ipAddress:
+    req.headers["x-forwarded-for"]?.split(",")[0] ||
+    req.socket.remoteAddress ||
+    "",
+  loginAt: new Date(),
+  lastActiveAt: new Date(),
+});
+
+user.loginActivity = user.loginActivity.slice(0, 20);
+
+await user.save();
 
     res.status(200).json({
       message: "Login successful",
