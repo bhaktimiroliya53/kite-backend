@@ -27,12 +27,12 @@ exports.registerUser = async (req, res) => {
     });
 
     await Notification.create({
-  userId: user._id,
-  actorId: user._id,
-  actorUsername: user.username,
-  type: "system",
-  message: `Welcome to KITE, ${user.username}! Your account is ready.`,
-});
+      userId: user._id,
+      actorId: user._id,
+      actorUsername: user.username,
+      type: "system",
+      message: `Welcome to KITE, ${user.username}! Your account is ready.`,
+    });
 
     res.status(201).json({
       message: "User registered successfully",
@@ -77,32 +77,51 @@ exports.loginUser = async (req, res) => {
 
     const sessionId = crypto.randomUUID();
 
-const token = jwt.sign(
-  {
-    id: user._id,
-    sessionId,
-  },
-  "secretkey",
-  {
-    expiresIn: "7d",
-  }
-);
+    const token = jwt.sign(
+      {
+        id: user._id,
+        sessionId,
+      },
+      "secretkey",
+      {
+        expiresIn: "7d",
+      }
+    );
 
-user.loginActivity.unshift({
-  sessionId,
-  device: req.headers["user-agent"] || "Unknown device",
-  browser: req.headers["user-agent"] || "Unknown browser",
-  ipAddress:
-    req.headers["x-forwarded-for"]?.split(",")[0] ||
-    req.socket.remoteAddress ||
-    "",
-  loginAt: new Date(),
-  lastActiveAt: new Date(),
-});
+    user.loginActivity.unshift({
+      sessionId,
+      device:
+        req.headers["user-agent"]?.includes("iPhone")
+          ? "iPhone"
+          : req.headers["user-agent"]?.includes("Macintosh")
+            ? "Mac"
+            : req.headers["user-agent"]?.includes("Windows")
+              ? "Windows PC"
+              : req.headers["user-agent"]?.includes("Android")
+                ? "Android"
+                : "Unknown device",
 
-user.loginActivity = user.loginActivity.slice(0, 20);
+      browser:
+        req.headers["user-agent"]?.includes("Edg/")
+          ? "Microsoft Edge"
+          : req.headers["user-agent"]?.includes("Chrome/")
+            ? "Google Chrome"
+            : req.headers["user-agent"]?.includes("Firefox/")
+              ? "Mozilla Firefox"
+              : req.headers["user-agent"]?.includes("Safari/")
+                ? "Safari"
+                : "Unknown browser",
+      ipAddress:
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.socket.remoteAddress ||
+        "",
+      loginAt: new Date(),
+      lastActiveAt: new Date(),
+    });
 
-await user.save();
+    user.loginActivity = user.loginActivity.slice(0, 20);
+
+    await user.save();
 
     res.status(200).json({
       message: "Login successful",
