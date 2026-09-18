@@ -19,6 +19,18 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
+    securityHealth: {
+      passwordChangedAt: {
+        type: Date,
+        default: null,
+      },
+
+      lastSecurityCheck: {
+        type: Date,
+        default: null,
+      },
+    },
+
     avatar: {
       type: String,
       default: "",

@@ -5,9 +5,9 @@ const {
   searchUsers,  
   getProfile,
   updateProfile,
-  getProfileChangeHistory,
   toggleFollow,
   updateSettings,
+  runSecurityCheck,
   approveFollowRequest,
   rejectFollowRequest,
 } = require("../controllers/userController");
@@ -26,12 +26,16 @@ router.put("/follow-request/approve/:id", approveFollowRequest);
 
 router.put("/follow-request/reject/:id", rejectFollowRequest);
 
-router.get("/:id/profile-history", getProfileChangeHistory);
-
 router.get("/:id", getProfile);
 
 router.put("/:id", updateProfile);
 
 router.put("/settings/:id", updateSettings);
+
+router.put(
+  "/security-check",
+  authMiddleware,
+  runSecurityCheck
+);
 
 module.exports = router;

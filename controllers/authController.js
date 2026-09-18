@@ -122,6 +122,7 @@ exports.changePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
+    user.securityHealth.passwordChangedAt = new Date();
 
     await user.save();
 

@@ -433,3 +433,41 @@ exports.updateSettings = async (req, res) => {
     });
   }
 };
+
+// Run Security Check
+exports.runSecurityCheck = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    user.securityHealth = user.securityHealth || {};
+
+    user.securityHealth.lastSecurityCheck = new Date();
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Security check completed",
+      lastSecurityCheck:
+        user.securityHealth.lastSecurityCheck,
+    });
+
+  } catch (error) {
+    console.log(
+      "SECURITY CHECK ERROR =>",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
