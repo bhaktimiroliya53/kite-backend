@@ -26,15 +26,11 @@ router.put("/follow-request/approve/:id", approveFollowRequest);
 
 router.put("/follow-request/reject/:id", rejectFollowRequest);
 
-router.put("/:id", updateProfile);
-
 router.put("/settings/:id", updateSettings);
 
-router.put(
-  "/security-check",
-  authMiddleware,
-  runSecurityCheck
-);
+router.put("/security-check", authMiddleware, runSecurityCheck);
+
+router.put("/:id", updateProfile);
 
 router.get("/:id", getProfile);
 
