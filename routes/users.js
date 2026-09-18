@@ -5,6 +5,7 @@ const {
   searchUsers,  
   getProfile,
   updateProfile,
+  getProfileChangeHistory,
   toggleFollow,
   updateSettings,
   approveFollowRequest,
@@ -24,6 +25,8 @@ router.put("/follow/:id", toggleFollow);
 router.put("/follow-request/approve/:id", approveFollowRequest);
 
 router.put("/follow-request/reject/:id", rejectFollowRequest);
+
+router.get("/:id/profile-history", getProfileChangeHistory);
 
 router.get("/:id", getProfile);
 
