@@ -29,6 +29,36 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    profileChangeHistory: [
+      {
+        type: {
+          type: String,
+          enum: [
+            "username",
+            "bio",
+            "avatar",
+            "privacy",
+          ],
+          required: true,
+        },
+
+        oldValue: {
+          type: String,
+          default: "",
+        },
+
+        newValue: {
+          type: String,
+          default: "",
+        },
+
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,

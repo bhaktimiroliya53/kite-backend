@@ -20,18 +20,91 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Update Profile
+/// Update Profile
 exports.updateProfile = async (req, res) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const user = await User.findById(req.params.id);
 
-    res.status(200).json(updatedUser);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const {
+      username,
+      bio,
+      avatar,
+    } = req.body;
+
+    const historyEntries = [];
+
+    // Username changed
+    if (
+      username !== undefined &&
+      username !== user.username
+    ) {
+      historyEntries.push({
+        type: "username",
+        oldValue: user.username || "",
+        newValue: username || "",
+        changedAt: new Date(),
+      });
+
+      user.username = username;
+    }
+
+    // Bio changed
+    if (
+      bio !== undefined &&
+      bio !== user.bio
+    ) {
+      historyEntries.push({
+        type: "bio",
+        oldValue: user.bio || "",
+        newValue: bio || "",
+        changedAt: new Date(),
+      });
+
+      user.bio = bio;
+    }
+
+    // Profile picture changed
+    if (
+      avatar !== undefined &&
+      avatar !== user.avatar
+    ) {
+      historyEntries.push({
+        type: "avatar",
+        oldValue: user.avatar || "",
+        newValue: avatar || "",
+        changedAt: new Date(),
+      });
+
+      user.avatar = avatar;
+    }
+
+    // Save profile change history
+    if (historyEntries.length > 0) {
+      user.profileChangeHistory.unshift(
+        ...historyEntries
+      );
+
+      // Keep only latest 50 changes
+      user.profileChangeHistory =
+        user.profileChangeHistory.slice(0, 50);
+    }
+
+    await user.save();
+
+    res.status(200).json(user);
 
   } catch (error) {
+    console.log(
+      "UPDATE PROFILE ERROR =>",
+      error
+    );
+
     res.status(500).json({
       message: error.message,
     });
@@ -296,6 +369,14 @@ exports.rejectFollowRequest = async (req, res) => {
 // Update Privacy & Theme
 exports.updateSettings = async (req, res) => {
   try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
     const {
       privateAccount,
       showActivity,
@@ -303,19 +384,50 @@ exports.updateSettings = async (req, res) => {
       theme,
     } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        privateAccount,
-        showActivity,
-        allowMessages,
-        theme,
-      },
-      { new: true }
+    // Track privacy change
+    if (
+      privateAccount !== undefined &&
+      privateAccount !== user.privateAccount
+    ) {
+      user.profileChangeHistory.unshift({
+        type: "privacy",
+        oldValue: String(user.privateAccount),
+        newValue: String(privateAccount),
+        changedAt: new Date(),
+      });
+    }
+
+    // Update settings
+    if (privateAccount !== undefined) {
+      user.privateAccount = privateAccount;
+    }
+
+    if (showActivity !== undefined) {
+      user.showActivity = showActivity;
+    }
+
+    if (allowMessages !== undefined) {
+      user.allowMessages = allowMessages;
+    }
+
+    if (theme !== undefined) {
+      user.theme = theme;
+    }
+
+    // Keep only latest 50 changes
+    user.profileChangeHistory =
+      user.profileChangeHistory.slice(0, 50);
+
+    await user.save();
+
+    res.status(200).json(user);
+
+  } catch (error) {
+    console.log(
+      "UPDATE SETTINGS ERROR =>",
+      error
     );
 
-    res.status(200).json(updatedUser);
-  } catch (error) {
     res.status(500).json({
       message: error.message,
     });
