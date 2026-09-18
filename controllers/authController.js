@@ -117,6 +117,7 @@ exports.loginUser = async (req, res) => {
         "",
       loginAt: new Date(),
       lastActiveAt: new Date(),
+      isActive: true,
     });
 
     user.loginActivity = user.loginActivity.slice(0, 20);

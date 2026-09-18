@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
   const authHeader = req.header("Authorization");
 
   if (!authHeader) {
@@ -15,6 +16,26 @@ module.exports = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, "secretkey");
+
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found",
+      });
+    }
+
+    const session = user.loginActivity.find(
+      (activity) => activity.sessionId === decoded.sessionId
+    );
+
+    if (!session || !session.isActive) {
+      return res.status(401).json({
+        message: "Session has been logged out",
+      });
+    }
+    session.lastActiveAt = new Date();
+    await user.save();
 
     req.user = decoded;
 

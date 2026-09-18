@@ -32,38 +32,43 @@ const userSchema = new mongoose.Schema(
     },
 
     loginActivity: [
-  {
-    sessionId: {
-      type: String,
-      required: true,
-    },
+      {
+        sessionId: {
+          type: String,
+          required: true,
+        },
 
-    device: {
-      type: String,
-      default: "Unknown device",
-    },
+        device: {
+          type: String,
+          default: "Unknown device",
+        },
 
-    browser: {
-      type: String,
-      default: "Unknown browser",
-    },
+        browser: {
+          type: String,
+          default: "Unknown browser",
+        },
 
-    ipAddress: {
-      type: String,
-      default: "",
-    },
+        ipAddress: {
+          type: String,
+          default: "",
+        },
 
-    loginAt: {
-      type: Date,
-      default: Date.now,
-    },
+        loginAt: {
+          type: Date,
+          default: Date.now,
+        },
 
-    lastActiveAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-],
+        lastActiveAt: {
+          type: Date,
+          default: Date.now,
+        },
+
+        isActive: {
+          type: Boolean,
+          default: true,
+        },
+      },
+    ],
 
     avatar: {
       type: String,
