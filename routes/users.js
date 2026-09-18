@@ -26,8 +26,6 @@ router.put("/follow-request/approve/:id", approveFollowRequest);
 
 router.put("/follow-request/reject/:id", rejectFollowRequest);
 
-router.get("/:id", getProfile);
-
 router.put("/:id", updateProfile);
 
 router.put("/settings/:id", updateSettings);
@@ -37,5 +35,7 @@ router.put(
   authMiddleware,
   runSecurityCheck
 );
+
+router.get("/:id", getProfile);
 
 module.exports = router;
