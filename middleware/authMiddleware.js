@@ -29,6 +29,13 @@ module.exports = async (req, res, next) => {
       (activity) => activity.sessionId === decoded.sessionId
     );
 
+    console.log("AUTH SESSION CHECK =>", {
+      userId: decoded.id,
+      sessionId: decoded.sessionId,
+      foundSession: !!session,
+      isActive: session?.isActive,
+    });
+
     if (!session || !session.isActive) {
       return res.status(401).json({
         message: "Session has been logged out",
