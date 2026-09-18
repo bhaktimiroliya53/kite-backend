@@ -495,7 +495,9 @@ exports.logoutSession = async (req, res) => {
       });
     }
 
-    session.isActive = false;
+    user.loginActivity = user.loginActivity.filter(
+      (activity) => activity.sessionId !== sessionId
+    );
 
     await user.save();
 
