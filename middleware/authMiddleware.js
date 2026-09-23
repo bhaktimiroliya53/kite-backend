@@ -42,6 +42,7 @@ module.exports = async (req, res, next) => {
       });
     }
     session.lastActiveAt = new Date();
+    user.digitalExpiry.lastActiveAt = new Date();
     await user.save();
 
     req.user = decoded;

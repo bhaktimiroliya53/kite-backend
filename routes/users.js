@@ -2,7 +2,7 @@ const express = require("express");
 
 const {
   getAllUsers,
-  searchUsers,  
+  searchUsers,
   getProfile,
   updateProfile,
   toggleFollow,
@@ -12,6 +12,7 @@ const {
   rejectFollowRequest,
   logoutSession,
   updateDigitalExpiry,
+  checkDigitalExpiry,
 } = require("../controllers/userController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -36,6 +37,12 @@ router.put(
   "/digital-expiry",
   authMiddleware,
   updateDigitalExpiry
+);
+
+router.get(
+  "/digital-expiry/check",
+  authMiddleware,
+  checkDigitalExpiry
 );
 
 router.put(

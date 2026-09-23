@@ -578,3 +578,44 @@ exports.updateDigitalExpiry = async (req, res) => {
     });
   }
 };
+
+// Check Digital Expiry
+exports.checkDigitalExpiry = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const { enabled, expiresAt, isArchived } =
+      user.digitalExpiry;
+
+    if (
+      enabled &&
+      expiresAt &&
+      new Date() >= new Date(expiresAt) &&
+      !isArchived
+    ) {
+      user.digitalExpiry.isArchived = true;
+
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      isArchived: user.digitalExpiry.isArchived,
+    });
+  } catch (error) {
+    console.log(
+      "DIGITAL EXPIRY CHECK ERROR =>",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
