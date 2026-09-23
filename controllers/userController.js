@@ -513,3 +513,35 @@ exports.logoutSession = async (req, res) => {
     });
   }
 };
+
+// Update Digital Expiry
+exports.updateDigitalExpiry = async (req, res) => {
+  try {
+    const { enabled, period } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    user.digitalExpiry.enabled = enabled;
+    user.digitalExpiry.period = period;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Digital Expiry updated successfully",
+      digitalExpiry: user.digitalExpiry,
+    });
+  } catch (error) {
+    console.log("DIGITAL EXPIRY UPDATE ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};

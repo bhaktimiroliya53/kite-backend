@@ -11,6 +11,7 @@ const {
   approveFollowRequest,
   rejectFollowRequest,
   logoutSession,
+  updateDigitalExpiry,
 } = require("../controllers/userController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -32,9 +33,15 @@ router.put("/settings/:id", updateSettings);
 router.put("/security-check", authMiddleware, runSecurityCheck);
 
 router.put(
+  "/digital-expiry",
+  authMiddleware,
+  updateDigitalExpiry
+);
+
+router.put(
   "/sessions/:sessionId/logout",
   authMiddleware,
-  logoutSession
+  logoutSession,
 );
 
 router.put("/:id", updateProfile);

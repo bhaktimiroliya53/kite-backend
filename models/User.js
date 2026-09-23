@@ -70,6 +70,34 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    digitalExpiry: {
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+
+      period: {
+        type: String,
+        enum: [
+          "never",
+          "6-months",
+          "1-year",
+          "2-years",
+        ],
+        default: "never",
+      },
+
+      lastActiveAt: {
+        type: Date,
+        default: Date.now,
+      },
+
+      expiresAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
     avatar: {
       type: String,
       default: "",
