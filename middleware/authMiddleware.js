@@ -42,8 +42,35 @@ module.exports = async (req, res, next) => {
       });
     }
     session.lastActiveAt = new Date();
-    user.digitalExpiry.lastActiveAt = new Date();
-    await user.save();
+
+const now = new Date();
+
+user.digitalExpiry.lastActiveAt = now;
+
+if (
+  user.digitalExpiry.enabled &&
+  user.digitalExpiry.period !== "never"
+) {
+  const expiryDate = new Date(now);
+
+  if (user.digitalExpiry.period === "6-months") {
+    expiryDate.setMonth(expiryDate.getMonth() + 6);
+  }
+
+  if (user.digitalExpiry.period === "1-year") {
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+  }
+
+  if (user.digitalExpiry.period === "2-years") {
+    expiryDate.setFullYear(expiryDate.getFullYear() + 2);
+  }
+
+  user.digitalExpiry.expiresAt = expiryDate;
+} else {
+  user.digitalExpiry.expiresAt = null;
+}
+
+await user.save();
 
     req.user = decoded;
 
