@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const User = require("./models/User");
 
 require("dotenv").config();
 
@@ -161,3 +162,36 @@ global.io = io;
 global.emitNotification = (userId, notification) => {
   io.to(userId.toString()).emit("new-notification", notification);
 };
+
+// Digital Expiry Auto Archive Checker
+setInterval(async () => {
+  try {
+    const now = new Date();
+
+    const result = await User.updateMany(
+      {
+        "digitalExpiry.enabled": true,
+        "digitalExpiry.expiresAt": {
+          $lte: now,
+        },
+        "digitalExpiry.isArchived": false,
+      },
+      {
+        $set: {
+          "digitalExpiry.isArchived": true,
+        },
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log(
+        `🗃️ Digital Expiry: Archived ${result.modifiedCount} account(s)`
+      );
+    }
+  } catch (error) {
+    console.log(
+      "DIGITAL EXPIRY AUTO CHECK ERROR =>",
+      error
+    );
+  }
+}, 60 * 60 * 1000);
