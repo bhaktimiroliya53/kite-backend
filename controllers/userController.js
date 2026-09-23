@@ -530,6 +530,36 @@ exports.updateDigitalExpiry = async (req, res) => {
     user.digitalExpiry.enabled = enabled;
     user.digitalExpiry.period = period;
 
+    const now = new Date();
+
+    if (!enabled || period === "never") {
+      user.digitalExpiry.expiresAt = null;
+    } else {
+      const expiryDate = new Date(now);
+
+      if (period === "6-months") {
+        expiryDate.setMonth(
+          expiryDate.getMonth() + 6
+        );
+      }
+
+      if (period === "1-year") {
+        expiryDate.setFullYear(
+          expiryDate.getFullYear() + 1
+        );
+      }
+
+      if (period === "2-years") {
+        expiryDate.setFullYear(
+          expiryDate.getFullYear() + 2
+        );
+      }
+
+      user.digitalExpiry.expiresAt = expiryDate;
+    }
+
+    user.digitalExpiry.lastActiveAt = now;
+
     await user.save();
 
     res.status(200).json({
@@ -538,7 +568,10 @@ exports.updateDigitalExpiry = async (req, res) => {
       digitalExpiry: user.digitalExpiry,
     });
   } catch (error) {
-    console.log("DIGITAL EXPIRY UPDATE ERROR =>", error);
+    console.log(
+      "DIGITAL EXPIRY UPDATE ERROR =>",
+      error
+    );
 
     res.status(500).json({
       message: error.message,
