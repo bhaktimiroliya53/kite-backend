@@ -36,15 +36,6 @@ exports.createPost = async (req, res) => {
       ),
     ];
 
-    console.log(
-  "🔥 HASHTAG DEBUG =>",
-  JSON.stringify({
-    content,
-    extractedHashtags,
-    audience,
-  })
-);
-
     console.log("FOUND USER =>", user);
 
     if (!user) {
@@ -78,11 +69,6 @@ exports.createPost = async (req, res) => {
     });
 
     await newPost.save();
-
-    console.log(
-  "💾 SAVED HASHTAGS =>",
-  JSON.stringify(newPost.hashtags)
-);
 
     // Create notifications for tagged people
     if (Array.isArray(taggedPeople) && taggedPeople.length > 0) {
@@ -190,62 +176,62 @@ exports.getPosts = async (req, res) => {
 exports.getTopics = async (req, res) => {
   try {
     const topics = await Post.aggregate([
-      {
-        $match: {
-          audience: "everyone",
-          hashtags: { $exists: true, $ne: [] },
-        },
-      },
+  {
+    $match: {
+      audience: "everyone",
+      hashtags: { $exists: true, $ne: [] },
+    },
+  },
 
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "owner",
-        },
-      },
+  {
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "_id",
+      as: "owner",
+    },
+  },
 
-      {
-        $unwind: "$owner",
-      },
+  {
+    $unwind: "$owner",
+  },
 
-      {
-        $match: {
-          "owner.privateAccount": { $ne: true },
-        },
-      },
+  {
+    $match: {
+      "owner.privateAccount": { $ne: true },
+    },
+  },
 
-      {
-        $unwind: "$hashtags",
-      },
+  {
+    $unwind: "$hashtags",
+  },
 
-      {
-        $group: {
-          _id: "$hashtags",
-          postCount: { $sum: 1 },
-        },
-      },
+  {
+    $group: {
+      _id: "$hashtags",
+      postCount: { $sum: 1 },
+    },
+  },
 
-      {
-        $sort: {
-          postCount: -1,
-          _id: 1,
-        },
-      },
+  {
+    $sort: {
+      postCount: -1,
+      _id: 1,
+    },
+  },
 
-      {
-        $limit: 30,
-      },
+  {
+    $limit: 30,
+  },
 
-      {
-        $project: {
-          _id: 0,
-          name: "$_id",
-          postCount: 1,
-        },
-      },
-    ]);
+  {
+    $project: {
+      _id: 0,
+      name: "$_id",
+      postCount: 1,
+    },
+  },
+]);
 
     res.status(200).json(topics);
   } catch (error) {
