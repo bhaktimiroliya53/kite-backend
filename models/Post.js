@@ -35,6 +35,14 @@ const postSchema = new mongoose.Schema(
       },
     ],
 
+    hashtags: [
+      {
+        type: String,
+        lowercase: true,
+        trim: true,
+      },
+    ],
+
     audience: {
       type: String,
       enum: ["everyone", "followers", "private"],
@@ -166,10 +174,11 @@ const postSchema = new mongoose.Schema(
     ],
   },
 
-  {
+    {
     timestamps: true
   }
 );
 
+postSchema.index({ hashtags: 1 });
 
 module.exports = mongoose.model("Post", postSchema);

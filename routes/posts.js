@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createPost,
   getPosts,
+  getTopics,
   searchPosts,
   getPostById,
   getUserPosts,
@@ -24,6 +25,8 @@ const {
 router.post("/", createPost);
 
 router.get("/", getPosts);
+
+router.get("/topics", getTopics);
 
 router.get("/search", searchPosts);
 

@@ -28,6 +28,14 @@ exports.createPost = async (req, res) => {
     }
     const user = await User.findById(userId);
 
+    const extractedHashtags = [
+      ...new Set(
+        (content || "")
+          .match(/#[a-zA-Z0-9_]+/g)
+          ?.map((tag) => tag.slice(1).toLowerCase()) || []
+      ),
+    ];
+
     console.log("FOUND USER =>", user);
 
     if (!user) {
@@ -46,6 +54,8 @@ exports.createPost = async (req, res) => {
       taggedPeople: Array.isArray(taggedPeople)
         ? taggedPeople
         : [],
+
+      hashtags: extractedHashtags,
 
       audience: ["everyone", "followers", "private"].includes(audience)
         ? audience
@@ -162,6 +172,77 @@ exports.getPosts = async (req, res) => {
   }
 };
 
+// Get Topics
+exports.getTopics = async (req, res) => {
+  try {
+    const topics = await Post.aggregate([
+  {
+    $match: {
+      audience: "everyone",
+      hashtags: { $exists: true, $ne: [] },
+    },
+  },
+
+  {
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "_id",
+      as: "owner",
+    },
+  },
+
+  {
+    $unwind: "$owner",
+  },
+
+  {
+    $match: {
+      "owner.privateAccount": { $ne: true },
+    },
+  },
+
+  {
+    $unwind: "$hashtags",
+  },
+
+  {
+    $group: {
+      _id: "$hashtags",
+      postCount: { $sum: 1 },
+    },
+  },
+
+  {
+    $sort: {
+      postCount: -1,
+      _id: 1,
+    },
+  },
+
+  {
+    $limit: 30,
+  },
+
+  {
+    $project: {
+      _id: 0,
+      name: "$_id",
+      postCount: 1,
+    },
+  },
+]);
+
+    res.status(200).json(topics);
+  } catch (error) {
+    console.error("GET TOPICS ERROR =>", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 // Search Posts
 exports.searchPosts = async (req, res) => {
   try {
@@ -172,24 +253,32 @@ exports.searchPosts = async (req, res) => {
       return res.status(200).json([]);
     }
 
-    const searchText = query.replace(/^#/, "");
+    const isHashtagSearch = query.startsWith("#");
+    const searchText = query.replace(/^#/, "").toLowerCase();
 
-    const posts = await Post.find({
-      $or: [
-        {
-          content: {
-            $regex: searchText,
-            $options: "i",
+    const postQuery = isHashtagSearch
+      ? {
+        hashtags: searchText,
+      }
+      : {
+        $or: [
+          {
+            content: {
+              $regex: searchText,
+              $options: "i",
+            },
           },
-        },
-        {
-          username: {
-            $regex: searchText,
-            $options: "i",
+          {
+            username: {
+              $regex: searchText,
+              $options: "i",
+            },
           },
-        },
-      ],
-    })
+        ],
+      };
+
+    const posts = await Post.find(postQuery)
+
       .populate("userId", "username avatar privateAccount followers")
       .populate("likes", "username avatar")
       .populate("reposts", "username avatar")
@@ -355,7 +444,19 @@ exports.editPost = async (req, res) => {
 
     // Only editable fields are updated.
     // image/media is intentionally NOT touched.
-    post.content = typeof content === "string" ? content : post.content;
+
+    const updatedContent =
+      typeof content === "string" ? content : post.content;
+
+    post.content = updatedContent;
+
+    post.hashtags = [
+      ...new Set(
+        updatedContent
+          .match(/#[a-zA-Z0-9_]+/g)
+          ?.map((tag) => tag.slice(1).toLowerCase()) || []
+      ),
+    ];
 
     post.taggedPeople = Array.isArray(taggedPeople)
       ? taggedPeople
