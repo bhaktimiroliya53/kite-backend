@@ -36,11 +36,14 @@ exports.createPost = async (req, res) => {
       ),
     ];
 
-    console.log("🔥 HASHTAG DEBUG =>", {
-      content,
-      extractedHashtags,
-      audience,
-    });
+    console.log(
+  "🔥 HASHTAG DEBUG =>",
+  JSON.stringify({
+    content,
+    extractedHashtags,
+    audience,
+  })
+);
 
     console.log("FOUND USER =>", user);
 
@@ -75,6 +78,11 @@ exports.createPost = async (req, res) => {
     });
 
     await newPost.save();
+
+    console.log(
+  "💾 SAVED HASHTAGS =>",
+  JSON.stringify(newPost.hashtags)
+);
 
     // Create notifications for tagged people
     if (Array.isArray(taggedPeople) && taggedPeople.length > 0) {
