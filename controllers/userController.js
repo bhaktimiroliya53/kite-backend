@@ -115,7 +115,9 @@ exports.updateProfile = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
-      .select("-password");
+      .select("-password")
+      .populate("followers", "username avatar")
+      .populate("following", "username avatar");
 
     res.status(200).json(users);
 
