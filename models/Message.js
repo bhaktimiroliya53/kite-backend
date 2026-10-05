@@ -30,9 +30,30 @@ const messageSchema = new mongoose.Schema(
     },
 
     sharedComment: {
-      username: String,
-      avatar: String,
-      text: String
+      postId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+
+      post: {
+        username: String,
+        avatar: String,
+        image: String,
+      },
+
+      comment: {
+        username: String,
+        avatar: String,
+        text: String,
+        image: String,
+      },
+
+      reply: {
+        username: String,
+        avatar: String,
+        text: String,
+        image: String,
+      },
     },
 
     reactions: [

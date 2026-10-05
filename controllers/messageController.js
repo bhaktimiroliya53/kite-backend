@@ -16,7 +16,7 @@ exports.sendMessage = async (req, res) => {
       receiverId,
       text,
       image,
-       gif,
+      gif,
     });
 
     const populatedMessage = await Message.findById(message._id)
@@ -131,9 +131,44 @@ exports.shareComment = async (req, res) => {
     const {
       senderId,
       receiverId,
-      comment
+      postId,
+      commentIndex,
+      replyIndex,
     } = req.body;
 
+    if (!senderId || !receiverId || !postId || commentIndex === undefined) {
+      return res.status(400).json({
+        message: "senderId, receiverId, postId and commentIndex are required",
+      });
+    }
+
+    const Post = require("../models/Post");
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found",
+      });
+    }
+
+    const comment = post.comments[commentIndex];
+
+    if (!comment) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    let selectedReply = null;
+
+    if (
+      replyIndex !== undefined &&
+      comment.replies &&
+      comment.replies[replyIndex]
+    ) {
+      selectedReply = comment.replies[replyIndex];
+    }
 
     const message = await Message.create({
       senderId,
@@ -142,23 +177,39 @@ exports.shareComment = async (req, res) => {
       text: "Shared a comment",
 
       sharedComment: {
-        username: comment.username,
-        avatar: comment.avatar,
-        text: comment.text,
+        postId: post._id,
+
+        post: {
+          username: post.username || "",
+          avatar: post.profilePic || "",
+          image: post.image || "",
+        },
+
+        comment: {
+          username: comment.username || "",
+          avatar: comment.avatar || "",
+          text: comment.text || "",
+          image: comment.image || "",
+        },
+
+        reply: selectedReply
+          ? {
+            username: "",
+            avatar: selectedReply.avatar || "",
+            text: selectedReply.text || "",
+            image: selectedReply.image || "",
+          }
+          : null,
       },
     });
 
-
     res.status(201).json(message);
-
   } catch (error) {
-
     console.log("SHARE COMMENT ERROR =>", error);
 
     res.status(500).json({
-      message:"Server error"
+      message: "Server error",
     });
-
   }
 };
 
