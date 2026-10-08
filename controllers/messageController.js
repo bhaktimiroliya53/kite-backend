@@ -9,6 +9,7 @@ exports.sendMessage = async (req, res) => {
       text = "",
       image = "",
       gif = "",
+      sharedComment = null,
     } = req.body;
 
     const message = await Message.create({
@@ -17,6 +18,7 @@ exports.sendMessage = async (req, res) => {
       text,
       image,
       gif,
+      sharedComment,
     });
 
     const populatedMessage = await Message.findById(message._id)
