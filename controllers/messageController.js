@@ -205,7 +205,14 @@ exports.shareComment = async (req, res) => {
       },
     });
 
-    res.status(201).json(message);
+    const populatedMessage = await Message.findById(message._id)
+      .populate("senderId", "username avatar")
+      .populate("receiverId", "username avatar");
+
+    global.io.emit("receiveMessage", populatedMessage);
+
+    res.status(201).json(populatedMessage);
+
   } catch (error) {
     console.log("SHARE COMMENT ERROR =>", error);
 
