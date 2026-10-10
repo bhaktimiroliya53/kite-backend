@@ -14,6 +14,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const topicSuggestionRoutes = require("./routes/topicSuggestionRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -132,6 +133,8 @@ app.use(
 );
 
 app.use("/api/ai", aiRoutes);
+app.use("/api/topic-suggestions", topicSuggestionRoutes);
+
 
 // Test Route
 app.get("/", (req, res) => {
