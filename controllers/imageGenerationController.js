@@ -136,18 +136,62 @@ exports.generateAIImage = async (req, res) => {
         );
 
         if (!response.ok) {
-            throw new Error("Cloudflare image generation failed");
+            const errorBody = await response.text();
+
+            console.error("Cloudflare Workers AI request failed:", {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorBody.slice(0, 1000),
+            });
+
+            throw new Error(
+                `Cloudflare image generation failed (${response.status})`
+            );
         }
 
         const contentType = response.headers.get("content-type") || "";
 
-        if (!contentType.startsWith("image/")) {
-            throw new Error("Cloudflare returned an unexpected image response");
+        let imageBuffer;
+
+        if (contentType.startsWith("image/")) {
+            imageBuffer = Buffer.from(await response.arrayBuffer());
+        } else if (contentType.includes("application/json")) {
+            const result = await response.json();
+
+            if (result.errors?.length) {
+                console.error("Cloudflare Workers AI returned errors:", result.errors);
+                throw new Error("Cloudflare AI could not generate the image");
+            }
+
+            const imageData = result.result?.image || result.image;
+
+            if (typeof imageData !== "string" || !imageData.length) {
+                console.error("Unexpected Cloudflare response:", {
+                    contentType,
+                    responseKeys: Object.keys(result),
+                    resultKeys: result.result
+                        ? Object.keys(result.result)
+                        : [],
+                });
+
+                throw new Error("Cloudflare response did not contain image data");
+            }
+
+            const base64Data = imageData.replace(
+                /^data:image\/[a-zA-Z0-9.+-]+;base64,/,
+                ""
+            );
+
+            imageBuffer = Buffer.from(base64Data, "base64");
+        } else {
+            console.error("Unexpected Cloudflare content type:", contentType);
+            throw new Error("Cloudflare returned an unsupported response format");
         }
 
-        const imageBuffer = Buffer.from(await response.arrayBuffer());
-
-        if (!imageBuffer.length || imageBuffer.length > 15 * 1024 * 1024) {
+        if (
+            !imageBuffer.length ||
+            imageBuffer.length > 15 * 1024 * 1024
+        ) {
             throw new Error("Generated image has an invalid size");
         }
 
