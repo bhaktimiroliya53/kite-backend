@@ -246,3 +246,36 @@ exports.generateAIImage = async (req, res) => {
         });
     }
 };
+
+// Get the logged-in user's generated AI images
+exports.getMyGeneratedImages = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Please sign in to view your generated images.",
+            });
+        }
+
+        const images = await AIImageGeneration.find({
+            userId,
+            status: "succeeded",
+            imageUrl: { $ne: null },
+        })
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .select("prompt style aspectRatio imageUrl createdAt");
+
+        return res.status(200).json({
+            message: "Your generated images were fetched successfully.",
+            images,
+        });
+    } catch (error) {
+        console.error("Fetch generated AI images failed:", error);
+
+        return res.status(500).json({
+            message: "Unable to fetch your generated images right now.",
+        });
+    }
+};
