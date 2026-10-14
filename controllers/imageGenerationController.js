@@ -279,3 +279,50 @@ exports.getMyGeneratedImages = async (req, res) => {
         });
     }
 };
+
+// Save a generated AI image to the user's KITE collection
+exports.saveMyGeneratedImage = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { id } = req.params;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Please sign in to save this image.",
+            });
+        }
+
+        const image = await AIImageGeneration.findOneAndUpdate(
+            {
+                _id: id,
+                userId,
+                status: "succeeded",
+                imageUrl: { $ne: null },
+            },
+            {
+                $set: { isSaved: true },
+            },
+            {
+                new: true,
+                runValidators: true,
+            }
+        ).select("prompt style aspectRatio imageUrl isSaved createdAt");
+
+        if (!image) {
+            return res.status(404).json({
+                message: "Generated image not found in your account.",
+            });
+        }
+
+        return res.status(200).json({
+            message: "Image saved to your KITE collection successfully!",
+            image,
+        });
+    } catch (error) {
+        console.error("Save generated AI image failed:", error);
+
+        return res.status(500).json({
+            message: "Unable to save this image right now.",
+        });
+    }
+};

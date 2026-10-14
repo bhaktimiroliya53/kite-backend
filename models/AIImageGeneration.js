@@ -40,6 +40,12 @@ const aiImageGenerationSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    isSaved: {
+    type: Boolean,
+    default: false,
+},
+
   },
   {
     timestamps: true,
