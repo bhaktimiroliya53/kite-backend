@@ -265,7 +265,7 @@ exports.getMyGeneratedImages = async (req, res) => {
         })
             .sort({ createdAt: -1 })
             .limit(100)
-            .select("prompt style aspectRatio imageUrl createdAt");
+            .select("prompt style aspectRatio imageUrl isSaved createdAt");
 
         return res.status(200).json({
             message: "Your generated images were fetched successfully.",
