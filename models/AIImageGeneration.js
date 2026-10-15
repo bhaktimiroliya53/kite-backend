@@ -41,6 +41,11 @@ const aiImageGenerationSchema = new mongoose.Schema(
       default: null,
     },
 
+    cloudinaryPublicId: {
+  type: String,
+  default: null,
+},
+
     isSaved: {
     type: Boolean,
     default: false,

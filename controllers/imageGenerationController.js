@@ -200,6 +200,8 @@ exports.generateAIImage = async (req, res) => {
 
         reservation.status = "succeeded";
         reservation.imageUrl = uploadedImage.secure_url;
+        reservation.cloudinaryPublicId = uploadedImage.public_id;
+
         await reservation.save();
 
         return res.status(201).json({
@@ -329,6 +331,71 @@ exports.saveMyGeneratedImage = async (req, res) => {
 
         return res.status(500).json({
             message: "Unable to save this image right now.",
+        });
+    }
+};
+
+// Delete a saved AI image from the user's KITE collection
+exports.deleteMyGeneratedImage = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { id } = req.params;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Please sign in to delete this image.",
+            });
+        }
+
+        const image = await AIImageGeneration.findOne({
+            _id: id,
+            userId,
+            status: "succeeded",
+            isSaved: true,
+        });
+
+        if (!image) {
+            return res.status(404).json({
+                message: "Saved image not found in your account.",
+            });
+        }
+
+        if (!image.cloudinaryPublicId) {
+            return res.status(409).json({
+                message:
+                    "This image cannot be safely deleted yet because its Cloudinary ID is missing.",
+            });
+        }
+
+        const cloudinaryResult = await cloudinary.uploader.destroy(
+            image.cloudinaryPublicId,
+            { resource_type: "image" }
+        );
+
+        if (
+            cloudinaryResult.result !== "ok" &&
+            cloudinaryResult.result !== "not found"
+        ) {
+            return res.status(502).json({
+                message: "Unable to delete the image from cloud storage.",
+            });
+        }
+
+        await AIImageGeneration.deleteOne({
+            _id: image._id,
+            userId,
+            isSaved: true,
+        });
+
+        return res.status(200).json({
+            message: "AI image deleted successfully.",
+            deletedImageId: image._id,
+        });
+    } catch (error) {
+        console.error("Delete saved AI image failed:", error);
+
+        return res.status(500).json({
+            message: "Unable to delete this image right now.",
         });
     }
 };
