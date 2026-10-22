@@ -12,6 +12,18 @@ const postSchema = new mongoose.Schema(
       default: "",
     },
 
+    imageDisclosure: {
+      type: String,
+      enum: ["original_upload", "ai_edited", "ai_generated"],
+      default: "original_upload",
+    },
+
+    aiGenerationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AIImageGeneration",
+      default: null,
+    },
+
     username: {
       type: String,
       default: "",
@@ -174,7 +186,7 @@ const postSchema = new mongoose.Schema(
     ],
   },
 
-    {
+  {
     timestamps: true
   }
 );

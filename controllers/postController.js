@@ -3,6 +3,7 @@ const Report = require("../models/Report");
 const cloudinary = require("../config/cloudinary");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const AIImageGeneration = require("../models/AIImageGeneration");
 
 
 // Create Post
@@ -19,6 +20,8 @@ exports.createPost = async (req, res) => {
       mood,
       location,
       music,
+      imageDisclosure,
+      aiGenerationId,
     } = req.body;
 
     if (!userId) {
@@ -44,9 +47,51 @@ exports.createPost = async (req, res) => {
       });
     }
 
+    // Verify image disclosure metadata.
+    let verifiedImageDisclosure = "original_upload";
+    let verifiedAIGenerationId = null;
+
+    if (imageDisclosure === "ai_generated") {
+      if (!aiGenerationId) {
+        return res.status(400).json({
+          message: "A verified AI generation record is required.",
+        });
+      }
+
+            const aiGeneration = await AIImageGeneration.findOne({
+        _id: aiGenerationId,
+        userId: user._id,
+        status: "succeeded",
+        isSaved: true,
+      });
+
+      if (!aiGeneration) {
+        return res.status(400).json({
+          message: "The AI generation record could not be verified.",
+        });
+      }
+
+      verifiedImageDisclosure = "ai_generated";
+      verifiedAIGenerationId = aiGeneration._id;
+    } else if (imageDisclosure === "ai_edited") {
+      return res.status(400).json({
+        message:
+          "AI-edited disclosure requires a verified editing source.",
+      });
+    } else if (
+      imageDisclosure &&
+      imageDisclosure !== "original_upload"
+    ) {
+      return res.status(400).json({
+        message: "Invalid image disclosure category.",
+      });
+    }
+
     const newPost = new Post({
       content: content || "",
       image: image || "",
+      imageDisclosure: verifiedImageDisclosure,
+      aiGenerationId: verifiedAIGenerationId,
       userId,
       username: user.username || "Unknown User",
       profilePic: user.avatar || "",
@@ -176,62 +221,62 @@ exports.getPosts = async (req, res) => {
 exports.getTopics = async (req, res) => {
   try {
     const topics = await Post.aggregate([
-  {
-    $match: {
-      audience: "everyone",
-      hashtags: { $exists: true, $ne: [] },
-    },
-  },
+      {
+        $match: {
+          audience: "everyone",
+          hashtags: { $exists: true, $ne: [] },
+        },
+      },
 
-  {
-    $lookup: {
-      from: "users",
-      localField: "userId",
-      foreignField: "_id",
-      as: "owner",
-    },
-  },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "owner",
+        },
+      },
 
-  {
-    $unwind: "$owner",
-  },
+      {
+        $unwind: "$owner",
+      },
 
-  {
-    $match: {
-      "owner.privateAccount": { $ne: true },
-    },
-  },
+      {
+        $match: {
+          "owner.privateAccount": { $ne: true },
+        },
+      },
 
-  {
-    $unwind: "$hashtags",
-  },
+      {
+        $unwind: "$hashtags",
+      },
 
-  {
-    $group: {
-      _id: "$hashtags",
-      postCount: { $sum: 1 },
-    },
-  },
+      {
+        $group: {
+          _id: "$hashtags",
+          postCount: { $sum: 1 },
+        },
+      },
 
-  {
-    $sort: {
-      postCount: -1,
-      _id: 1,
-    },
-  },
+      {
+        $sort: {
+          postCount: -1,
+          _id: 1,
+        },
+      },
 
-  {
-    $limit: 30,
-  },
+      {
+        $limit: 30,
+      },
 
-  {
-    $project: {
-      _id: 0,
-      name: "$_id",
-      postCount: 1,
-    },
-  },
-]);
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          postCount: 1,
+        },
+      },
+    ]);
 
     res.status(200).json(topics);
   } catch (error) {
