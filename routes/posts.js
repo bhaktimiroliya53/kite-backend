@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../middleware/authMiddleware");
 
 const {
   createPost,
@@ -49,6 +50,7 @@ router.put(
 
 router.delete(
   "/comment/:postId/:commentIndex",
+  authMiddleware,
   deleteComment
 );
 
