@@ -128,6 +128,11 @@ const postSchema = new mongoose.Schema(
         avatar: String,
         text: String,
 
+        image: {
+          type: String,
+          default: "",
+        },
+
         likes: [
           {
             type: String,
