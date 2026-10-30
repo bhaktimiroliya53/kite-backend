@@ -58,7 +58,7 @@ exports.createPost = async (req, res) => {
         });
       }
 
-            const aiGeneration = await AIImageGeneration.findOne({
+      const aiGeneration = await AIImageGeneration.findOne({
         _id: aiGenerationId,
         userId: user._id,
         status: "succeeded",
@@ -1166,6 +1166,60 @@ exports.toggleReplyLike = async (req, res) => {
     console.log("REPLY LIKE ERROR =>", error);
 
     res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// Delete Individual Reply
+exports.deleteReply = async (req, res) => {
+  try {
+    const { postId, commentIndex, replyIndex } = req.params;
+    const currentUserId = req.user.id;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found",
+      });
+    }
+
+    const comment = post.comments[Number(commentIndex)];
+
+    if (!comment) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    const reply = comment.replies[Number(replyIndex)];
+
+    if (!reply) {
+      return res.status(404).json({
+        message: "Reply not found",
+      });
+    }
+
+    if (String(reply.userId) !== String(currentUserId)) {
+      return res.status(403).json({
+        message: "You can only delete your own reply",
+      });
+    }
+
+    comment.replies.splice(Number(replyIndex), 1);
+
+    await post.save();
+
+    return res.status(200).json({
+      message: "Reply deleted successfully",
+      post,
+    });
+
+  } catch (error) {
+    console.error("DELETE REPLY ERROR =>", error);
+
+    return res.status(500).json({
       message: error.message,
     });
   }

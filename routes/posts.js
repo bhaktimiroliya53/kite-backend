@@ -20,7 +20,9 @@ const {
   toggleSave,
   addReply,
   toggleReplyLike,
+  deleteReply,
   repostComment,
+  
 } = require("../controllers/postController");
 
 router.post("/", createPost);
@@ -56,6 +58,12 @@ router.delete(
 
 router.put("/reply/:postId/:commentIndex", addReply);
 
+router.delete(
+  "/reply/:postId/:commentIndex/:replyIndex",
+  authMiddleware,
+  deleteReply
+);
+
 router.put(
   "/reply-like/:postId/:commentIndex/:replyIndex",
   toggleReplyLike
@@ -68,11 +76,6 @@ router.put("/save/:id", toggleSave);
 router.post("/report/:id", reportPost);
 
 module.exports = router;
-
-router.put(
- "/reply/:postId/:commentIndex",
- addReply
-);
 
 router.put(
 "/comment-repost/:postId/:commentIndex",
